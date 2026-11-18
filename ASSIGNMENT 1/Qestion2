@@ -1,0 +1,105 @@
+const fs = require('fs');
+const readline = require('readline');
+
+const file = 'attendance.txt';
+
+if (!fs.existsSync(file)) {
+    fs.writeFileSync(file, '');
+}
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+function ask(question) {
+    return new Promise(resolve => {
+        rl.question(question, resolve);
+    });
+}
+
+async function main() {
+
+    while (true) {
+
+        console.log("\n1. Add Student");
+        console.log("2. Show Students");
+        console.log("3. Update Student");
+        console.log("4. Delete Student");
+        console.log("5. Exit");
+
+        let choice = await ask("Enter your choice: ");
+
+        let students = fs.readFileSync(file, 'utf8')
+            .split(/\r?\n/)
+            .filter(name => name.trim() !== '');
+
+        switch (choice) {
+
+            case '1': {
+                let name = (await ask("Enter student name: ")).trim();
+
+                if (name) {
+                    students.push(name);
+                    fs.writeFileSync(file, students.join('\n'));
+                    console.log("Student added successfully!");
+                }
+                break;
+            }
+
+            case '2':
+                console.log("Attendance List:");
+
+                if (students.length === 0) {
+                    console.log("No students found.");
+                } else {
+                    students.forEach((name, index) => {
+                        console.log(`${index + 1}. ${name}`);
+                    });
+                }
+                break;
+
+            case '3': {
+                let oldName = (await ask("Enter old name: ")).trim();
+                let index = students.indexOf(oldName);
+
+                if (index !== -1) {
+                    let newName = (await ask("Enter new name: ")).trim();
+
+                    students[index] = newName;
+                    fs.writeFileSync(file, students.join('\n'));
+
+                    console.log("Name updated successfully!");
+                } else {
+                    console.log("Student not found.");
+                }
+                break;
+            }
+
+            case '4': {
+                let name = (await ask("Enter name to delete: ")).trim();
+                let index = students.indexOf(name);
+
+                if (index !== -1) {
+                    students.splice(index, 1);
+                    fs.writeFileSync(file, students.join('\n'));
+
+                    console.log("Student deleted successfully!");
+                } else {
+                    console.log("Student not found.");
+                }
+                break;
+            }
+
+            case '5':
+                console.log("Program ended.");
+                rl.close();
+                return;
+
+            default:
+                console.log("Invalid choice!");
+        }
+    }
+}
+
+main();
